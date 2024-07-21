@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="ca">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Space Invaders Mòbil</title>
     <style>
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
         }
+
         #gameCanvas {
             display: block;
             touch-action: none;
         }
     </style>
 </head>
+
 <body>
     <canvas id="gameCanvas"></canvas>
     <script>
@@ -143,7 +147,7 @@
             }
 
             if (Math.random() < 0.1) {
-                bullets.push({x: player.x + player.width / 2, y: player.y});
+                bullets.push({ x: player.x + player.width / 2, y: player.y });
             }
 
             drawPlayer();
@@ -171,10 +175,10 @@
             const touchX = e.touches[0].clientX;
             const deltaX = touchX - touchStartX;
             player.x += deltaX;
-            
+
             if (player.x < 0) player.x = 0;
             if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
-            
+
             touchStartX = touchX;
         });
 
@@ -183,25 +187,68 @@
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             player.x = mouseX - player.width / 2;
-            
+
             if (player.x < 0) player.x = 0;
             if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
         });
 
         // Control per moviment del mòbil
         window.addEventListener('deviceorientation', e => {
-            const tilt = e.gamma; // Gamma is the left-to-right tilt in degrees
-            if (tilt) {
-                player.x += tilt;
-                if (player.x < 0) player.x = 0;
-                if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
+            const tilt = e.gamma; // Gamma és la inclinació d'esquerra a dreta en graus
+            if (tilt !== null) {
+                // Ajustem la sensibilitat del moviment
+                const sensitivity = 2;
+                player.x += tilt * sensitivity;
+
+                // Assegurem-nos que la nau no surti de la pantalla
+                player.x = Math.max(0, Math.min(gameWidth - player.width, player.x));
             }
         });
+
+
+
+
+
+
+        // Afegim una funció per sol·licitar permís d'accés al sensor d'orientació
+        function requestOrientationPermission() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            console.log("Permís d'orientació concedit");
+                        } else {
+                            console.log("Permís d'orientació denegat");
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                console.log("El permís d'orientació no és necessari");
+            }
+        }
+
+
+        // Cridem la funció de sol·licitud de permís quan es carrega el joc
+        window.addEventListener('load', requestOrientationPermission);
+
+
+
+
 
         // Inicialització i inici del joc
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         gameLoop();
+
+
+
+
+
+
+
+
+
     </script>
 </body>
+
 </html>
