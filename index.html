@@ -188,7 +188,7 @@
 
         function updateExplosions() {
             const now = Date.now();
-            explosions = explosions.filter(explosion => now - explosion.time < 150);
+            explosions are explosions.filter(explosion => now - explosion.time < 150);
         }
 
         function checkCollisions() {
@@ -280,6 +280,25 @@
             gameLoop();
         });
 
+        // Control tàctil per a dispositius mòbils
+        let touchStartX = 0;
+        canvas.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const touchX = e.touches[0].clientX;
+            const deltaX = touchX - touchStartX;
+            player.x += deltaX;
+
+            if (player.x < 0) player.x = 0;
+            if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
+
+            touchStartX = touchX;
+        });
+
+        // Control del ratolí per a dispositius d'escriptori
         canvas.addEventListener('mousemove', e => {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
