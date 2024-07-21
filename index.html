@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Consellers Invaders</title>
+    <title>Space Invaders</title>
     <style>
         body,
         html {
@@ -13,36 +13,99 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            position: relative;
+        }
+
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('fons.jpg') no-repeat center center fixed;
+            background-size: cover;
+            opacity: 0.5;
+            z-index: -1;
         }
 
         #gameCanvas {
             display: block;
             touch-action: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        #startScreen,
+        #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            flex-direction: column;
+        }
+
+        #startButton,
+        #retryButton {
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+        }
+
+        #scoreBoard {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 3;
         }
     </style>
 </head>
 
 <body>
+    <div id="background"></div>
     <canvas id="gameCanvas"></canvas>
+    <div id="startScreen">
+        <img id="introPlayer" src="nau.png" alt="Player">
+        <button id="startButton">Inicia el Joc</button>
+    </div>
+    <div id="gameOverScreen" style="display: none;">
+        <h1>Game Over</h1>
+        <button id="retryButton">Torna a jugar</button>
+    </div>
+    <div id="scoreBoard">Puntuació: 0</div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         let gameWidth, gameHeight;
-        let player, enemies, bullets, score;
+        let player, enemies, bullets, score, gameOver, explosions;
 
         // Imatges (substitueix amb les teves pròpies URLs)
         const playerImg = new Image();
-        playerImg.src = 'navicella_spaziale.svg';
+        playerImg.src = 'nau.png';
         const enemyImgs = [
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Josep_Bargall%C3%B3_retrat_oficial_2018.jpg/200px-Josep_Bargall%C3%B3_retrat_oficial_2018.jpg',
-            'https://upload.wikimedia.org/wikipedia/commons/2/24/Anna_Sim%C3%B3_foto_oficial_2023.png',
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Josep_Gonz%C3%A1lez_Cambray_retrat_oficial_2021_%28cropped%29.jpg/241px-Josep_Gonz%C3%A1lez_Cambray_retrat_oficial_2021_%28cropped%29.jpg'
+            'fadasimo.png',
+            'bargallo.png',
+            'cambray.png'
         ].map(src => {
             const img = new Image();
             img.src = src;
             return img;
         });
+        const explosionImg = new Image();
+        explosionImg.src = 'explosio.png';
 
         function initGame() {
             gameWidth = canvas.width;
@@ -57,10 +120,13 @@
 
             enemies = [];
             bullets = [];
+            explosions = [];
             score = 0;
+            gameOver = false;
+
+            document.getElementById('scoreBoard').innerText = 'Puntuació: ' + score;
         }
 
-        // Funció per ajustar la mida del canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -96,6 +162,12 @@
             });
         }
 
+        function drawExplosions() {
+            explosions.forEach(explosion => {
+                ctx.drawImage(explosionImg, explosion.x, explosion.y, explosion.width, explosion.height);
+            });
+        }
+
         function moveEnemies() {
             enemies.forEach(enemy => {
                 enemy.y += enemy.speed;
@@ -114,6 +186,11 @@
             });
         }
 
+        function updateExplosions() {
+            const now = Date.now();
+            explosions = explosions.filter(explosion => now - explosion.time < 150);
+        }
+
         function checkCollisions() {
             bullets.forEach(bullet => {
                 enemies.forEach(enemy => {
@@ -121,9 +198,22 @@
                         bullet.x + gameWidth * 0.01 > enemy.x &&
                         bullet.y < enemy.y + enemy.height &&
                         bullet.y + gameHeight * 0.02 > enemy.y) {
+                        explosions.push({
+                            x: enemy.x,
+                            y: enemy.y,
+                            width: enemy.width,
+                            height: enemy.height,
+                            time: Date.now()
+                        });
                         enemies.splice(enemies.indexOf(enemy), 1);
                         bullets.splice(bullets.indexOf(bullet), 1);
                         score += 10;
+                        document.getElementById('scoreBoard').innerText = 'Puntuació: ' + score;
+
+                        // Crear una nova instància de l'àudio i reproduir-la
+                        const explosionAudio = new Audio('explosio.mp3');
+                        explosionAudio.volume = 0.25; // Ajustar el volum aquí
+                        explosionAudio.play();
                     }
                 });
             });
@@ -133,13 +223,13 @@
                     enemy.x + enemy.width > player.x &&
                     enemy.y < player.y + player.height &&
                     enemy.y + enemy.height > player.y) {
-                    alert('Game Over! Puntuació: ' + score);
-                    initGame();
+                    endGame();
                 }
             });
         }
 
         function gameLoop() {
+            if (gameOver) return;
             ctx.clearRect(0, 0, gameWidth, gameHeight);
 
             if (Math.random() < 0.02) {
@@ -153,36 +243,43 @@
             drawPlayer();
             drawEnemies();
             drawBullets();
+            drawExplosions();
             moveEnemies();
             moveBullets();
+            updateExplosions();
             checkCollisions();
-
-            ctx.fillStyle = 'black';
-            ctx.font = gameWidth * 0.05 + 'px Arial';
-            ctx.fillText('Puntuació: ' + score, 10, gameHeight * 0.05);
 
             requestAnimationFrame(gameLoop);
         }
 
-        // Control tàctil
-        let touchStartX = 0;
-        canvas.addEventListener('touchstart', e => {
-            touchStartX = e.touches[0].clientX;
+        function endGame() {
+            gameOver = true;
+            gameAudio.pause();
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function playAudioFromStart() {
+            gameAudio.currentTime = 0;
+            gameAudio.play();
+        }
+
+        const gameAudio = new Audio('SpaceCadence.mp3');
+        gameAudio.loop = true;
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            document.getElementById('startScreen').style.display = 'none';
+            resizeCanvas();
+            playAudioFromStart();
+            gameLoop();
         });
 
-        canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            const touchX = e.touches[0].clientX;
-            const deltaX = touchX - touchStartX;
-            player.x += deltaX;
-
-            if (player.x < 0) player.x = 0;
-            if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
-
-            touchStartX = touchX;
+        document.getElementById('retryButton').addEventListener('click', () => {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            initGame();
+            playAudioFromStart();
+            gameLoop();
         });
 
-        // Control del ratolí
         canvas.addEventListener('mousemove', e => {
             const rect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -192,62 +289,8 @@
             if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
         });
 
-        // Control per moviment del mòbil
-        window.addEventListener('deviceorientation', e => {
-            const tilt = e.gamma; // Gamma és la inclinació d'esquerra a dreta en graus
-            if (tilt !== null) {
-                // Ajustem la sensibilitat del moviment
-                const sensitivity = 2;
-                player.x += tilt * sensitivity;
-
-                // Assegurem-nos que la nau no surti de la pantalla
-                player.x = Math.max(0, Math.min(gameWidth - player.width, player.x));
-            }
-        });
-
-
-
-
-
-
-        // Afegim una funció per sol·licitar permís d'accés al sensor d'orientació
-        function requestOrientationPermission() {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            console.log("Permís d'orientació concedit");
-                        } else {
-                            console.log("Permís d'orientació denegat");
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                console.log("El permís d'orientació no és necessari");
-            }
-        }
-
-
-        // Cridem la funció de sol·licitud de permís quan es carrega el joc
-        window.addEventListener('load', requestOrientationPermission);
-
-
-
-
-
-        // Inicialització i inici del joc
-        resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
-        gameLoop();
-
-
-
-
-
-
-
-
-
+        resizeCanvas();
     </script>
 </body>
 
