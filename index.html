@@ -70,6 +70,16 @@
             border-radius: 5px;
             z-index: 3;
         }
+
+        #levelBoard {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 3;
+        }
     </style>
 </head>
 
@@ -85,12 +95,14 @@
         <button id="retryButton">Torna a jugar</button>
     </div>
     <div id="scoreBoard">Puntuació: 0</div>
+    <div id="levelBoard">Nivell: 1</div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         let gameWidth, gameHeight;
         let player, enemies, bullets, score, gameOver, explosions;
+        let level, enemySpeed, enemyFrequency, bulletFrequency;
 
         // Imatges (substitueix amb les teves pròpies URLs)
         const playerImg = new Image();
@@ -123,8 +135,17 @@
             explosions = [];
             score = 0;
             gameOver = false;
+            level = 1;
+            updateLevelParameters();
 
             document.getElementById('scoreBoard').innerText = 'Puntuació: ' + score;
+            document.getElementById('levelBoard').innerText = 'Nivell: ' + level;
+        }
+
+        function updateLevelParameters() {
+            enemySpeed = (1 + level * 0.5) * gameHeight / 1000;
+            enemyFrequency = 0.02 + level * 0.005;
+            // bulletFrequency = 0.1 - level * 0.01;
         }
 
         function resizeCanvas() {
@@ -140,7 +161,7 @@
                 y: -width,
                 width: width,
                 height: width,
-                speed: (1 + Math.random() * 2) * gameHeight / 1000,
+                speed: enemySpeed,
                 image: enemyImgs[Math.floor(Math.random() * enemyImgs.length)]
             };
         }
@@ -214,6 +235,13 @@
                         const explosionAudio = new Audio('explosio.mp3');
                         explosionAudio.volume = 0.25; // Ajustar el volum aquí
                         explosionAudio.play();
+
+                        // Augmentar nivell cada 100 punts
+                        if (score % 200 === 0) {
+                            level++;
+                            updateLevelParameters();
+                            document.getElementById('levelBoard').innerText = 'Nivell: ' + level;
+                        }
                     }
                 });
             });
@@ -232,11 +260,11 @@
             if (gameOver) return;
             ctx.clearRect(0, 0, gameWidth, gameHeight);
 
-            if (Math.random() < 0.02) {
+            if (Math.random() < enemyFrequency) {
                 enemies.push(createEnemy());
             }
 
-            if (Math.random() < 0.1) {
+            if (Math.random() < bulletFrequency) {
                 bullets.push({ x: player.x + player.width / 2, y: player.y });
             }
 
