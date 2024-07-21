@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Invaders Mòbil</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameWidth, gameHeight;
+        let player, enemies, bullets, score;
+
+        // Imatges (substitueix amb les teves pròpies URLs)
+        const playerImg = new Image();
+        playerImg.src = 'navicella_spaziale.svg';
+        const enemyImgs = [
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Josep_Bargall%C3%B3_retrat_oficial_2018.jpg/200px-Josep_Bargall%C3%B3_retrat_oficial_2018.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/2/24/Anna_Sim%C3%B3_foto_oficial_2023.png',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Josep_Gonz%C3%A1lez_Cambray_retrat_oficial_2021_%28cropped%29.jpg/241px-Josep_Gonz%C3%A1lez_Cambray_retrat_oficial_2021_%28cropped%29.jpg'
+        ].map(src => {
+            const img = new Image();
+            img.src = src;
+            return img;
+        });
+
+        function initGame() {
+            gameWidth = canvas.width;
+            gameHeight = canvas.height;
+
+            player = {
+                x: gameWidth / 2,
+                y: gameHeight - gameWidth * 0.15 - 10,
+                width: gameWidth * 0.15,
+                height: gameWidth * 0.15,
+            };
+
+            enemies = [];
+            bullets = [];
+            score = 0;
+        }
+
+        // Funció per ajustar la mida del canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initGame();
+        }
+
+        function createEnemy() {
+            const width = gameWidth * 0.1;
+            return {
+                x: Math.random() * (gameWidth - width),
+                y: -width,
+                width: width,
+                height: width,
+                speed: (1 + Math.random() * 2) * gameHeight / 1000,
+                image: enemyImgs[Math.floor(Math.random() * enemyImgs.length)]
+            };
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+        }
+
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = 'red';
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, gameWidth * 0.01, gameHeight * 0.02);
+            });
+        }
+
+        function moveEnemies() {
+            enemies.forEach(enemy => {
+                enemy.y += enemy.speed;
+                if (enemy.y > gameHeight) {
+                    enemies.splice(enemies.indexOf(enemy), 1);
+                }
+            });
+        }
+
+        function moveBullets() {
+            bullets.forEach(bullet => {
+                bullet.y -= gameHeight / 100;
+                if (bullet.y < 0) {
+                    bullets.splice(bullets.indexOf(bullet), 1);
+                }
+            });
+        }
+
+        function checkCollisions() {
+            bullets.forEach(bullet => {
+                enemies.forEach(enemy => {
+                    if (bullet.x < enemy.x + enemy.width &&
+                        bullet.x + gameWidth * 0.01 > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + gameHeight * 0.02 > enemy.y) {
+                        enemies.splice(enemies.indexOf(enemy), 1);
+                        bullets.splice(bullets.indexOf(bullet), 1);
+                        score += 10;
+                    }
+                });
+            });
+
+            enemies.forEach(enemy => {
+                if (enemy.x < player.x + player.width &&
+                    enemy.x + enemy.width > player.x &&
+                    enemy.y < player.y + player.height &&
+                    enemy.y + enemy.height > player.y) {
+                    alert('Game Over! Puntuació: ' + score);
+                    initGame();
+                }
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, gameWidth, gameHeight);
+
+            if (Math.random() < 0.02) {
+                enemies.push(createEnemy());
+            }
+
+            if (Math.random() < 0.1) {
+                bullets.push({x: player.x + player.width / 2, y: player.y});
+            }
+
+            drawPlayer();
+            drawEnemies();
+            drawBullets();
+            moveEnemies();
+            moveBullets();
+            checkCollisions();
+
+            ctx.fillStyle = 'black';
+            ctx.font = gameWidth * 0.05 + 'px Arial';
+            ctx.fillText('Puntuació: ' + score, 10, gameHeight * 0.05);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Control tàctil
+        let touchStartX = 0;
+        canvas.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const touchX = e.touches[0].clientX;
+            const deltaX = touchX - touchStartX;
+            player.x += deltaX;
+            
+            if (player.x < 0) player.x = 0;
+            if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
+            
+            touchStartX = touchX;
+        });
+
+        // Control del ratolí
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            player.x = mouseX - player.width / 2;
+            
+            if (player.x < 0) player.x = 0;
+            if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
+        });
+
+        // Inicialització i inici del joc
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        gameLoop();
+    </script>
+</body>
+</html>
