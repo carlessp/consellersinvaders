@@ -188,6 +188,16 @@
             if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
         });
 
+        // Control per moviment del mòbil
+        window.addEventListener('deviceorientation', e => {
+            const tilt = e.gamma; // Gamma is the left-to-right tilt in degrees
+            if (tilt) {
+                player.x += tilt;
+                if (player.x < 0) player.x = 0;
+                if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
+            }
+        });
+
         // Inicialització i inici del joc
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
