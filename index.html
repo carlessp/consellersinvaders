@@ -106,8 +106,7 @@
     <div id="background"></div>
     <canvas id="gameCanvas"></canvas>
     <div id="startScreen">
-        <img id="introPlayer" src="https://github.com/carlessp/consellersinvaders/blob/main/nau.png?raw=true"
-            alt="Player" style="width: 150px; height: auto;">
+        <img id="introPlayer" src="https://github.com/carlessp/consellersinvaders/blob/main/nau.png?raw=true" alt="Player" style="width: 150px; height: auto;">
         <button id="startButton">Inicia el Joc</button>
     </div>
     <div id="gameOverScreen" style="display: none;">
@@ -118,281 +117,297 @@
     <div id="scoreBoard">Punts: 0</div>
     <div id="levelBoard">Nvll: 1</div>
     <script>
-// Optimitzacions globals
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-let gameWidth, gameHeight;
-let player, enemies, bullets, score, gameOver, explosions, specialEnemies;
-let level, enemySpeed, enemyFrequency, bulletFrequency, specialEnemyFrequency, bulletMultiplier, bonusActive;
-let shooting = false;
-let gameOverReason = '';
-let lastTime = 0;
-const FPS = 60;
-const frameTime = 1000 / FPS;
+        let gameWidth, gameHeight;
+        let player, enemies, bullets, score, gameOver, explosions, specialEnemies;
+        let level, enemySpeed, enemyFrequency, bulletFrequency, specialEnemyFrequency, bulletMultiplier, bonusActive;
+        let shooting = false;
+        let gameOverReason = '';
+        let lastTime = 0;
+        const FPS = 60;
+        const frameTime = 1000 / FPS;
 
-// Precarregar imatges
-const playerImg = new Image();
-playerImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/nau.png?raw=true';
-const enemyImgs = [
-    'https://github.com/carlessp/consellersinvaders/blob/main/fadasimo.png?raw=true',
-    'https://github.com/carlessp/consellersinvaders/blob/main/bargallo.png?raw=true',
-    'https://github.com/carlessp/consellersinvaders/blob/main/cambray.png?raw=true'
-].map(src => {
-    const img = new Image();
-    img.src = src;
-    return img;
-});
-const specialEnemyImg = new Image();
-specialEnemyImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/alyssa.png?raw=true';
-const explosionImg = new Image();
-explosionImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/explosio.png?raw=true';
+        // Precarregar imatges
+        const playerImg = new Image();
+        playerImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/nau.png?raw=true';
+        const enemyImgs = [
+            'https://github.com/carlessp/consellersinvaders/blob/main/fadasimo.png?raw=true',
+            'https://github.com/carlessp/consellersinvaders/blob/main/bargallo.png?raw=true',
+            'https://github.com/carlessp/consellersinvaders/blob/main/cambray.png?raw=true'
+        ].map(src => {
+            const img = new Image();
+            img.src = src;
+            return img;
+        });
+        const specialEnemyImg = new Image();
+        specialEnemyImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/alyssa.png?raw=true';
+        const explosionImg = new Image();
+        explosionImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/explosio.png?raw=true';
 
-function initGame() {
-    gameWidth = canvas.width;
-    gameHeight = canvas.height;
+        function initGame() {
+            gameWidth = canvas.width;
+            gameHeight = canvas.height;
 
-    player = {
-        x: gameWidth / 2,
-        y: gameHeight - gameWidth * 0.15 - 10,
-        width: gameWidth * 0.15,
-        height: gameWidth * 0.15,
-    };
+            player = {
+                x: gameWidth / 2,
+                y: gameHeight - gameWidth * 0.15 - 10,
+                width: gameWidth * 0.15,
+                height: gameWidth * 0.15,
+            };
 
-    enemies = [];
-    specialEnemies = [];
-    bullets = [];
-    explosions = [];
-    score = 0;
-    gameOver = false;
-    level = 1;
-    bulletMultiplier = 1;
-    bonusActive = false;
-    updateLevelParameters();
+            enemies = [];
+            specialEnemies = [];
+            bullets = [];
+            explosions = [];
+            score = 0;
+            gameOver = false;
+            level = 1;
+            bulletMultiplier = 1;
+            bonusActive = false;
+            updateLevelParameters();
 
-    document.getElementById('scoreBoard').innerText = 'Punts: ' + score;
-    document.getElementById('levelBoard').innerText = 'Nvll: ' + level;
-    document.getElementById('gameOverReason').innerText = '';
-}
-
-function updateLevelParameters() {
-    enemySpeed = (2 + level * 0.5) * gameHeight / 1000;
-    enemyFrequency = 0.015 + level * 0.003;
-    specialEnemyFrequency = (level % 3 === 0 && specialEnemies.length === 0) ? 0.005 : 0;
-}
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gameWidth = canvas.width;
-    gameHeight = canvas.height;
-    initGame();
-}
-
-function createEnemy() {
-    const width = gameWidth * 0.15;
-    return {
-        x: Math.random() * (gameWidth - width),
-        y: -width,
-        width: width,
-        height: width,
-        speed: enemySpeed,
-        image: enemyImgs[Math.floor(Math.random() * enemyImgs.length)],
-        special: false
-    };
-}
-
-function createSpecialEnemy() {
-    const width = gameWidth * 0.15;
-    return {
-        x: Math.random() * (gameWidth - width),
-        y: -width,
-        width: width,
-        height: width,
-        speed: enemySpeed,
-        image: specialEnemyImg,
-        special: true,
-        invulnerable: true
-    };
-}
-
-function drawEntities() {
-    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-    
-    enemies.forEach(enemy => {
-        ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
-    });
-    
-    specialEnemies.forEach(enemy => {
-        ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
-    });
-    
-    ctx.fillStyle = 'red';
-    bullets.forEach(bullet => {
-        ctx.fillRect(bullet.x, bullet.y, gameWidth * 0.01, gameHeight * 0.02);
-    });
-    
-    explosions.forEach(explosion => {
-        ctx.drawImage(explosionImg, explosion.x, explosion.y, explosion.width, explosion.height);
-    });
-}
-
-function updateEntities(deltaTime) {
-    const enemySpeedDelta = enemySpeed * deltaTime / 16.67; // Ajustat per mantenir la velocitat original
-    const bulletSpeedDelta = (gameHeight / 100) * deltaTime / 16.67;
-
-    enemies = enemies.filter(enemy => {
-        enemy.y += enemySpeedDelta;
-        return enemy.y <= gameHeight;
-    });
-
-    specialEnemies = specialEnemies.filter(enemy => {
-        enemy.y += enemySpeedDelta;
-        if (enemy.y > gameHeight / 4) {
-            enemy.invulnerable = false;
+            document.getElementById('scoreBoard').innerText = 'Punts: ' + score;
+            document.getElementById('levelBoard').innerText = 'Nvll: ' + level;
+            document.getElementById('gameOverReason').innerText = '';
         }
-        if (enemy.y > gameHeight) {
-            activateBonus();
-            return false;
+
+        function updateLevelParameters() {
+            enemySpeed = (3 + level * 0.5) * gameHeight / 1000;
+            enemyFrequency = 0.015 + level * 0.003;
+            specialEnemyFrequency = (level % 3 === 0 && specialEnemies.length === 0) ? 0.005 : 0;
         }
-        return true;
-    });
 
-    bullets = bullets.filter(bullet => {
-        bullet.y -= bulletSpeedDelta;
-        return bullet.y >= 0;
-    });
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gameWidth = canvas.width;
+            gameHeight = canvas.height;
+            initGame();
+        }
 
-    const now = Date.now();
-    explosions = explosions.filter(explosion => now - explosion.time < 150);
-}
+        function createEnemy() {
+            const width = gameWidth * 0.15;
+            return {
+                x: Math.random() * (gameWidth - width),
+                y: -width,
+                width: width,
+                height: width,
+                speed: enemySpeed,
+                image: enemyImgs[Math.floor(Math.random() * enemyImgs.length)],
+                special: false
+            };
+        }
 
-function checkCollisions() {
-    bullets.forEach(bullet => {
-        enemies.forEach(enemy => {
-            if (bullet.x < enemy.x + enemy.width &&
-                bullet.x + gameWidth * 0.01 > enemy.x &&
-                bullet.y < enemy.y + enemy.height &&
-                bullet.y + gameHeight * 0.02 > enemy.y) {
-                explosions.push({
-                    x: enemy.x,
-                    y: enemy.y,
-                    width: enemy.width,
-                    height: enemy.height,
-                    time: Date.now()
+        function createSpecialEnemy() {
+            const width = gameWidth * 0.15;
+            return {
+                x: Math.random() * (gameWidth - width),
+                y: -width,
+                width: width,
+                height: width,
+                speed: enemySpeed,
+                image: specialEnemyImg,
+                special: true,
+                invulnerable: true
+            };
+        }
+
+        function createBullet(angle) {
+            const bulletSpeed = gameHeight / 100;
+            return {
+                x: player.x + player.width / 2,
+                y: player.y,
+                speed: bulletSpeed,
+                angle: angle
+            };
+        }
+
+        function drawEntities() {
+            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+            
+            enemies.forEach(enemy => {
+                ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+            
+            specialEnemies.forEach(enemy => {
+                ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+            
+            ctx.fillStyle = 'red';
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, gameWidth * 0.01, gameHeight * 0.02);
+            });
+            
+            explosions.forEach(explosion => {
+                ctx.drawImage(explosionImg, explosion.x, explosion.y, explosion.width, explosion.height);
+            });
+        }
+
+        function updateEntities(deltaTime) {
+            const enemySpeedDelta = enemySpeed * deltaTime / 16.67;
+            const bulletSpeedDelta = (gameHeight / 100) * deltaTime / 16.67;
+
+            enemies = enemies.filter(enemy => {
+                enemy.y += enemySpeedDelta;
+                return enemy.y <= gameHeight;
+            });
+
+            specialEnemies = specialEnemies.filter(enemy => {
+                enemy.y += enemySpeedDelta;
+                if (enemy.y > gameHeight / 4) {
+                    enemy.invulnerable = false;
+                }
+                if (enemy.y > gameHeight) {
+                    activateBonus();
+                    return false;
+                }
+                return true;
+            });
+
+            bullets = bullets.filter(bullet => {
+                bullet.x += Math.sin(bullet.angle) * bulletSpeedDelta;
+                bullet.y -= Math.cos(bullet.angle) * bulletSpeedDelta;
+                return bullet.y >= 0 && bullet.x >= 0 && bullet.x <= gameWidth;
+            });
+
+            const now = Date.now();
+            explosions = explosions.filter(explosion => now - explosion.time < 150);
+        }
+
+        function checkCollisions() {
+            bullets.forEach(bullet => {
+                enemies.forEach(enemy => {
+                    if (bullet.x < enemy.x + enemy.width &&
+                        bullet.x + gameWidth * 0.01 > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + gameHeight * 0.02 > enemy.y) {
+                        explosions.push({
+                            x: enemy.x,
+                            y: enemy.y,
+                            width: enemy.width,
+                            height: enemy.height,
+                            time: Date.now()
+                        });
+                        enemies.splice(enemies.indexOf(enemy), 1);
+                        bullets.splice(bullets.indexOf(bullet), 1);
+                        score += 10;
+                        document.getElementById('scoreBoard').innerText = 'Punts: ' + score;
+
+                        const explosionAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663141/explosio_uapebs.mp3');
+                        explosionAudio.volume = 0.25;
+                        explosionAudio.play();
+
+                        if (score % 200 === 0) {
+                            level++;
+                            updateLevelParameters();
+                            document.getElementById('levelBoard').innerText = 'Nvll: ' + level;
+                        }
+                    }
                 });
-                enemies.splice(enemies.indexOf(enemy), 1);
-                bullets.splice(bullets.indexOf(bullet), 1);
-                score += 10;
-                document.getElementById('scoreBoard').innerText = 'Punts: ' + score;
 
-                const explosionAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663141/explosio_uapebs.mp3');
-                explosionAudio.volume = 0.25;
-                explosionAudio.play();
+                specialEnemies.forEach(enemy => {
+                    if (!enemy.invulnerable && bullet.x < enemy.x + enemy.width &&
+                        bullet.x + gameWidth * 0.01 > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + gameHeight * 0.02 > enemy.y) {
+                        gameOverReason = "No pots atacar l'Alyssa!";
+                        endGame();
+                    }
+                });
+            });
 
-                if (score % 200 === 0) {
-                    level++;
-                    updateLevelParameters();
-                    document.getElementById('levelBoard').innerText = 'Nvll: ' + level;
+            enemies.forEach(enemy => {
+                if (enemy.x < player.x + player.width &&
+                    enemy.x + enemy.width > player.x &&
+                    enemy.y < player.y + player.height &&
+                    enemy.y + enemy.height > player.y) {
+                    gameOverReason = "T'ha enxampat un conseller!";
+                    endGame();
                 }
+            });
+        }
+
+        function activateBonus() {
+            bulletMultiplier = 3;
+            bonusActive = true;
+            const bonusAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663141/bonus_drj6cl.mp3');
+            bonusAudio.play();
+            setTimeout(() => {
+                bulletMultiplier = 1;
+                bonusActive = false;
+            }, 6000);
+        }
+
+        function gameLoop(currentTime) {
+            if (gameOver) return;
+
+            const deltaTime = currentTime - lastTime;
+
+            if (deltaTime >= frameTime) {
+                ctx.clearRect(0, 0, gameWidth, gameHeight);
+
+                if (Math.random() < enemyFrequency) {
+                    enemies.push(createEnemy());
+                }
+
+                if (Math.random() < specialEnemyFrequency && specialEnemies.length === 0) {
+                    specialEnemies.push(createSpecialEnemy());
+                }
+
+                if (shooting) {
+                    if (bonusActive) {
+                        const spreadAngle = Math.PI / 6; // 30 graus
+                        for (let i = 0; i < bulletMultiplier; i++) {
+                            const angle = -spreadAngle / 2 + (spreadAngle / (bulletMultiplier - 1)) * i;
+                            bullets.push(createBullet(angle));
+                        }
+                    } else {
+                        if (Math.random() < 0.1) {
+                            bullets.push(createBullet(0));
+                        }
+                    }
+                }
+
+                updateEntities(deltaTime);
+                checkCollisions();
+                drawEntities();
+
+                lastTime = currentTime;
             }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameOver = true;
+            gameAudio.pause();
+            document.getElementById('gameOverReason').innerText = gameOverReason;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function playAudioFromStart() {
+            gameAudio.currentTime = 0;
+            gameAudio.play();
+        }
+
+        const gameAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663142/SpaceCadence_m1tyyj.mp3');
+        gameAudio.loop = true;
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            document.getElementById('startScreen').style.display = 'none';
+            resizeCanvas();
+            playAudioFromStart();
+            gameLoop();
         });
 
-        specialEnemies.forEach(enemy => {
-            if (!enemy.invulnerable && bullet.x < enemy.x + enemy.width &&
-                bullet.x + gameWidth * 0.01 > enemy.x &&
-                bullet.y < enemy.y + enemy.height &&
-                bullet.y + gameHeight * 0.02 > enemy.y) {
-                gameOverReason = "No pots atacar l'Alyssa!";
-                endGame();
-            }
+        document.getElementById('retryButton').addEventListener('click', () => {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            initGame();
+            playAudioFromStart();
+            gameLoop();
         });
-    });
-
-    enemies.forEach(enemy => {
-        if (enemy.x < player.x + player.width &&
-            enemy.x + enemy.width > player.x &&
-            enemy.y < player.y + player.height &&
-            enemy.y + enemy.height > player.y) {
-            gameOverReason = "T'ha enxampat un conseller!";
-            endGame();
-        }
-    });
-}
-
-function activateBonus() {
-    bulletMultiplier = 3;
-    bonusActive = true;
-    const bonusAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663141/bonus_drj6cl.mp3');
-    bonusAudio.play();
-    setTimeout(() => {
-        bulletMultiplier = 1;
-        bonusActive = false;
-    }, 3000);
-}
-
-function gameLoop(currentTime) {
-    if (gameOver) return;
-
-    const deltaTime = currentTime - lastTime;
-
-    if (deltaTime >= frameTime) {
-        ctx.clearRect(0, 0, gameWidth, gameHeight);
-
-        if (Math.random() < enemyFrequency) {
-            enemies.push(createEnemy());
-        }
-
-        if (Math.random() < specialEnemyFrequency && specialEnemies.length === 0) {
-            specialEnemies.push(createSpecialEnemy());
-        }
-
-        if (shooting) {
-            for (let i = 0; i < bulletMultiplier; i++) {
-                if (Math.random() < 0.1) {
-                    bullets.push({ x: player.x + player.width / 2, y: player.y });
-                }
-            }
-        }
-
-        updateEntities(deltaTime);
-        checkCollisions();
-        drawEntities();
-
-        lastTime = currentTime;
-    }
-
-    requestAnimationFrame(gameLoop);
-}
-
-function endGame() {
-    gameOver = true;
-    gameAudio.pause();
-    document.getElementById('gameOverReason').innerText = gameOverReason;
-    document.getElementById('gameOverScreen').style.display = 'flex';
-}
-
-function playAudioFromStart() {
-    gameAudio.currentTime = 0;
-    gameAudio.play();
-}
-
-const gameAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663142/SpaceCadence_m1tyyj.mp3');
-gameAudio.loop = true;
-
-document.getElementById('startButton').addEventListener('click', () => {
-    document.getElementById('startScreen').style.display = 'none';
-    resizeCanvas();
-    playAudioFromStart();
-    gameLoop();
-});
-
-document.getElementById('retryButton').addEventListener('click', () => {
-    document.getElementById('gameOverScreen').style.display = 'none';
-    initGame();
-    playAudioFromStart();
-    gameLoop();
-});
 
 // Control tàctil per a dispositius mòbils
 let touchStartX = 0;
