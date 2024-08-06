@@ -3,456 +3,226 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Consellers Invaders</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Alba Abrams</title>
+    <link rel="icon" type="image/x-icon" href="icona.ico">
+    <link rel="apple-touch-icon" href="icona.png">
 
-        body,
-        html {
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400&family=Great+Vibes&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #fce4ec;
+            color: #333;
+            background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f48fb1' fill-opacity='0.2'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive;
+            text-align: center;
+            color: #ad1457;
+            font-size: 5em;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #missatge-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            margin-bottom: 60px;
+        }
+
+        #missatge {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            border: 2px solid #f48fb1;
             position: relative;
-            font-family: 'Press Start 2P', cursive;
-            background: #000;
-            color: #fff;
+            font-style: italic;
         }
 
-        #background {
+        #missatge::before {
+            content: '"';
+            font-size: 4em;
+            color: #ad1457;
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('fons.jpg') no-repeat center center fixed;
-            background-size: cover;
-            opacity: 0.7;
-            z-index: -1;
+            top: -20px;
+            left: 10px;
+            font-family: 'Playfair Display', serif;
         }
 
-        #gameCanvas {
-            display: block;
-            touch-action: none;
-            position: relative;
-            z-index: 1;
-        }
-
-        #startScreen,
-        #gameOverScreen {
+        #missatge::after {
+            content: '"';
+            font-size: 4em;
+            color: #ad1457;
             position: absolute;
-            top: 0;
+            bottom: -50px;
+            right: 10px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        #font {
+            font-style: italic;
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem;
+            text-align: right;
+            color: #ad1457;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        footer {
+            background-color: #ad1457;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 1.2em;
+            position: fixed;
+            bottom: 0;
             left: 0;
+            right: 0;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 2;
-            flex-direction: column;
+        }
+
+        .heart {
+            color: #ff4081;
+            font-size: 1.5em;
+            margin: 0 5px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 0 10%;
+            }
+        }
+
+        #modal, #modal2 {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 2px solid #ad1457;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
-            color: #fff;
+            padding: 10px;
+            z-index: 1000;
+            width: 80%;
+            max-width: 600px;
+            /* Optional: Set a maximum width */
         }
 
-        #startButton,
-        #retryButton {
-            padding: 15px 30px;
-            font-size: 20px;
-            cursor: pointer;
-            background-color: #ff0000;
-            color: #fff;
-            border: none;
+        #modal img {
+            width: 95%;
+            /* height: 100px; */
+        }
+        #modal2 img {
+            width: 95%;
+            /* height: 100px; */
+        }
+
+        #game-container {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 10px;
+        }
+
+        .game-cell {
+            width: 80px;
+            height: 80px;
+            margin: 5px;
+            border: 2px solid #ad1457;
             border-radius: 10px;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
+            overflow: hidden;
+            position: relative;
         }
 
-        #startButton:hover,
-        #retryButton:hover {
-            background-color: #ff4500;
-        }
-
-        #scoreBoard,
-        #levelBoard {
+        .game-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             position: absolute;
-            top: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 10px 20px;
-            border-radius: 10px;
-            z-index: 3;
-            font-size: 16px;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        #scoreBoard {
-            left: 10px;
+        #score {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 10px;
+            color: #ad1457;
         }
 
-        #levelBoard {
-            right: 10px;
-        }
-
-        #gameOverReason {
-            font-size: 24px;
-            color: #ff0000;
-            margin-bottom: 20px;
+        @media (min-width: 768px) {
+            body {
+                padding: 0 10%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div id="background"></div>
-    <canvas id="gameCanvas"></canvas>
-    <div id="startScreen">
-        <img id="introPlayer" src="https://github.com/carlessp/consellersinvaders/blob/main/nau.png?raw=true" alt="Player" style="width: 150px; height: auto;">
-        <button id="startButton">Inicia el Joc</button>
+    <h1>Alba Abrams</h1>
+    <div id="missatge-container">
+        <p id="missatge"></p>
+        <p id="font"></p>
     </div>
-    <div id="gameOverScreen" style="display: none;">
-        <h1>Game Over</h1>
-        <div id="gameOverReason"></div>
-        <button id="retryButton">Torna a jugar</button>
+    <div id="game-container"></div>
+    <div id="score">Puntuació: 0</div>
+    <div id="modal">
+        <h2>Nooooo!</h2>
+        <img src="error.png" alt="Error">
     </div>
-    <div id="scoreBoard">Punts: 0</div>
-    <div id="levelBoard">Nvll: 1</div>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    <div id="modal2">
+        <h2>Molt bé!</h2>
+        <img src="be.png" alt="Error">
+    </div>
+    <footer>
+        <span class="heart">♥</span>
+        <div id="comptador"></div>
+        <span class="heart">♥</span>
+    </footer>
 
-        let gameWidth, gameHeight;
-        let player, enemies, bullets, score, gameOver, explosions, specialEnemies;
-        let level, enemySpeed, enemyFrequency, bulletFrequency, specialEnemyFrequency, bulletMultiplier, bonusActive;
-        let shooting = false;
-        let gameOverReason = '';
-        let lastTime = 0;
-        const FPS = 60;
-        const frameTime = 1000 / FPS;
-
-        // Precarregar imatges
-        const playerImg = new Image();
-        playerImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/nau.png?raw=true';
-        const enemyImgs = [
-            'https://github.com/carlessp/consellersinvaders/blob/main/fadasimo.png?raw=true',
-            'https://github.com/carlessp/consellersinvaders/blob/main/bargallo.png?raw=true',
-            'https://github.com/carlessp/consellersinvaders/blob/main/cambray.png?raw=true'
-        ].map(src => {
-            const img = new Image();
-            img.src = src;
-            return img;
-        });
-        const specialEnemyImg = new Image();
-        specialEnemyImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/alyssa.png?raw=true';
-        const explosionImg = new Image();
-        explosionImg.src = 'https://github.com/carlessp/consellersinvaders/blob/main/explosio.png?raw=true';
-
-        function initGame() {
-            gameWidth = canvas.width;
-            gameHeight = canvas.height;
-
-            player = {
-                x: gameWidth / 2,
-                y: gameHeight - gameWidth * 0.15 - 10,
-                width: gameWidth * 0.15,
-                height: gameWidth * 0.15,
-            };
-
-            enemies = [];
-            specialEnemies = [];
-            bullets = [];
-            explosions = [];
-            score = 0;
-            gameOver = false;
-            level = 1;
-            bulletMultiplier = 1;
-            bonusActive = false;
-            updateLevelParameters();
-
-            document.getElementById('scoreBoard').innerText = 'Punts: ' + score;
-            document.getElementById('levelBoard').innerText = 'Nvll: ' + level;
-            document.getElementById('gameOverReason').innerText = '';
-        }
-
-        function updateLevelParameters() {
-            enemySpeed = (3 + level * 0.5) * gameHeight / 1000;
-            enemyFrequency = 0.015 + level * 0.003;
-            specialEnemyFrequency = (level % 3 === 0 && specialEnemies.length === 0) ? 0.005 : 0;
-        }
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            gameWidth = canvas.width;
-            gameHeight = canvas.height;
-            initGame();
-        }
-
-        function createEnemy() {
-            const width = gameWidth * 0.15;
-            return {
-                x: Math.random() * (gameWidth - width),
-                y: -width,
-                width: width,
-                height: width,
-                speed: enemySpeed,
-                image: enemyImgs[Math.floor(Math.random() * enemyImgs.length)],
-                special: false
-            };
-        }
-
-        function createSpecialEnemy() {
-            const width = gameWidth * 0.15;
-            return {
-                x: Math.random() * (gameWidth - width),
-                y: -width,
-                width: width,
-                height: width,
-                speed: enemySpeed,
-                image: specialEnemyImg,
-                special: true,
-                invulnerable: true
-            };
-        }
-
-        function createBullet(angle) {
-            const bulletSpeed = gameHeight / 100;
-            return {
-                x: player.x + player.width / 2,
-                y: player.y,
-                speed: bulletSpeed,
-                angle: angle
-            };
-        }
-
-        function drawEntities() {
-            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-            
-            enemies.forEach(enemy => {
-                ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
-            });
-            
-            specialEnemies.forEach(enemy => {
-                ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
-            });
-            
-            ctx.fillStyle = 'red';
-            bullets.forEach(bullet => {
-                ctx.fillRect(bullet.x, bullet.y, gameWidth * 0.01, gameHeight * 0.02);
-            });
-            
-            explosions.forEach(explosion => {
-                ctx.drawImage(explosionImg, explosion.x, explosion.y, explosion.width, explosion.height);
-            });
-        }
-
-        function updateEntities(deltaTime) {
-            const enemySpeedDelta = enemySpeed * deltaTime / 16.67;
-            const bulletSpeedDelta = (gameHeight / 100) * deltaTime / 16.67;
-
-            enemies = enemies.filter(enemy => {
-                enemy.y += enemySpeedDelta;
-                return enemy.y <= gameHeight;
-            });
-
-            specialEnemies = specialEnemies.filter(enemy => {
-                enemy.y += enemySpeedDelta;
-                if (enemy.y > gameHeight / 4) {
-                    enemy.invulnerable = false;
-                }
-                if (enemy.y > gameHeight) {
-                    activateBonus();
-                    return false;
-                }
-                return true;
-            });
-
-            bullets = bullets.filter(bullet => {
-                bullet.x += Math.sin(bullet.angle) * bulletSpeedDelta;
-                bullet.y -= Math.cos(bullet.angle) * bulletSpeedDelta;
-                return bullet.y >= 0 && bullet.x >= 0 && bullet.x <= gameWidth;
-            });
-
-            const now = Date.now();
-            explosions = explosions.filter(explosion => now - explosion.time < 150);
-        }
-
-        function checkCollisions() {
-            bullets.forEach(bullet => {
-                enemies.forEach(enemy => {
-                    if (bullet.x < enemy.x + enemy.width &&
-                        bullet.x + gameWidth * 0.01 > enemy.x &&
-                        bullet.y < enemy.y + enemy.height &&
-                        bullet.y + gameHeight * 0.02 > enemy.y) {
-                        explosions.push({
-                            x: enemy.x,
-                            y: enemy.y,
-                            width: enemy.width,
-                            height: enemy.height,
-                            time: Date.now()
-                        });
-                        enemies.splice(enemies.indexOf(enemy), 1);
-                        bullets.splice(bullets.indexOf(bullet), 1);
-                        score += 10;
-                        document.getElementById('scoreBoard').innerText = 'Punts: ' + score;
-
-                        const explosionAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663141/explosio_uapebs.mp3');
-                        explosionAudio.volume = 0.25;
-                        explosionAudio.play();
-
-                        if (score % 200 === 0) {
-                            level++;
-                            updateLevelParameters();
-                            document.getElementById('levelBoard').innerText = 'Nvll: ' + level;
-                        }
-                    }
-                });
-
-                specialEnemies.forEach(enemy => {
-                    if (!enemy.invulnerable && bullet.x < enemy.x + enemy.width &&
-                        bullet.x + gameWidth * 0.01 > enemy.x &&
-                        bullet.y < enemy.y + enemy.height &&
-                        bullet.y + gameHeight * 0.02 > enemy.y) {
-                        gameOverReason = "No pots atacar l'Alyssa!";
-                        endGame();
-                    }
-                });
-            });
-
-            enemies.forEach(enemy => {
-                if (enemy.x < player.x + player.width &&
-                    enemy.x + enemy.width > player.x &&
-                    enemy.y < player.y + player.height &&
-                    enemy.y + enemy.height > player.y) {
-                    gameOverReason = "T'ha enxampat un conseller!";
-                    endGame();
-                }
-            });
-        }
-
-        function activateBonus() {
-            bulletMultiplier = 3;
-            bonusActive = true;
-            const bonusAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663141/bonus_drj6cl.mp3');
-            bonusAudio.play();
-            setTimeout(() => {
-                bulletMultiplier = 1;
-                bonusActive = false;
-            }, 6000);
-        }
-
-        function gameLoop(currentTime) {
-            if (gameOver) return;
-
-            const deltaTime = currentTime - lastTime;
-
-            if (deltaTime >= frameTime) {
-                ctx.clearRect(0, 0, gameWidth, gameHeight);
-
-                if (Math.random() < enemyFrequency) {
-                    enemies.push(createEnemy());
-                }
-
-                if (Math.random() < specialEnemyFrequency && specialEnemies.length === 0) {
-                    specialEnemies.push(createSpecialEnemy());
-                }
-
-                if (shooting) {
-                    if (bonusActive) {
-                        const spreadAngle = Math.PI / 6; // 30 graus
-                        for (let i = 0; i < bulletMultiplier; i++) {
-                            const angle = -spreadAngle / 2 + (spreadAngle / (bulletMultiplier - 1)) * i;
-                            bullets.push(createBullet(angle));
-                        }
-                    } else {
-                        if (Math.random() < 0.1) {
-                            bullets.push(createBullet(0));
-                        }
-                    }
-                }
-
-                updateEntities(deltaTime);
-                checkCollisions();
-                drawEntities();
-
-                lastTime = currentTime;
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function endGame() {
-            gameOver = true;
-            gameAudio.pause();
-            document.getElementById('gameOverReason').innerText = gameOverReason;
-            document.getElementById('gameOverScreen').style.display = 'flex';
-        }
-
-        function playAudioFromStart() {
-            gameAudio.currentTime = 0;
-            gameAudio.play();
-        }
-
-        const gameAudio = new Audio('https://res.cloudinary.com/dsiy1id5k/video/upload/v1721663142/SpaceCadence_m1tyyj.mp3');
-        gameAudio.loop = true;
-
-        document.getElementById('startButton').addEventListener('click', () => {
-            document.getElementById('startScreen').style.display = 'none';
-            resizeCanvas();
-            playAudioFromStart();
-            gameLoop();
-        });
-
-        document.getElementById('retryButton').addEventListener('click', () => {
-            document.getElementById('gameOverScreen').style.display = 'none';
-            initGame();
-            playAudioFromStart();
-            gameLoop();
-        });
-
-// Control tàctil per a dispositius mòbils
-let touchStartX = 0;
-canvas.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-    shooting = true;
-});
-
-canvas.addEventListener('touchend', () => {
-    shooting = false;
-});
-
-canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const touchX = e.touches[0].clientX;
-    const deltaX = touchX - touchStartX;
-    player.x += deltaX;
-
-    if (player.x < 0) player.x = 0;
-    if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
-
-    touchStartX = touchX;
-});
-
-// Control del ratolí per a dispositius d'escriptori
-canvas.addEventListener('mousedown', () => {
-    shooting = true;
-});
-
-canvas.addEventListener('mouseup', () => {
-    shooting = false;
-});
-
-canvas.addEventListener('mousemove', e => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    player.x = mouseX - player.width / 2;
-
-    if (player.x < 0) player.x = 0;
-    if (player.x > gameWidth - player.width) player.x = gameWidth - player.width;
-});
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-    </script>
+<script src="fitxer.js"></script>
 </body>
-
 </html>
